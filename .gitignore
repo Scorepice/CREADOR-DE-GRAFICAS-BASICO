@@ -1,0 +1,9 @@
+# Ocultar credenciales
+.env
+
+# Ocultar basura de Python y PyInstaller
+__pycache__/
+build/
+dist/
+*.spec
+*.png
