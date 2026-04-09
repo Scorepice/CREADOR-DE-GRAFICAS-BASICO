@@ -291,6 +291,9 @@ class AplicacionGraficasAvanzada:
                 return True
         except Exception:
             pass
+
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Segoe UI', 'Arial', 'Century Gothic']
         return False
 
     def _configurar_estilos(self):
