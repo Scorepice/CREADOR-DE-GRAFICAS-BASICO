@@ -1,14 +1,22 @@
 import os
+import sys
 from dotenv import load_dotenv
 
+def obtener_base_app():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+BASE_APP = obtener_base_app()
+
 # Cargar las variables del archivo .env oculto
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(BASE_APP, '.env'))
 
 import tkinter as tk
 # ... el resto de tus imports ...
 from tkinter import colorchooser, messagebox, filedialog
 import io
-import os
 import re
 from datetime import date, datetime
 import shutil
@@ -22,8 +30,6 @@ from tkinter import ttk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from crear_grafica_personalizada import VentanaGraficaPersonalizada
-import os
-from dotenv import load_dotenv
 
 APP_BG = "#F3F6FB"
 CARD_BG = "#FFFFFF"
@@ -39,8 +45,6 @@ MUTED_BUTTON = "#F3F4F6"
 MUTED_BUTTON_HOVER = "#E5E7EB"
 
 # Carga el archivo secreto
-load_dotenv()
-
 # ==========================================
 # CONFIGURACIÓN DE FUENTE ESTILIZADA
 # Intenta usar Poppins. Si la PC no la tiene instalada, usa alternativas limpias.
@@ -61,7 +65,7 @@ class AplicacionGraficasAvanzada:
         self.usa_poppins = self._configurar_fuentes()
         self._configurar_estilos()
         self.url_invitado = os.getenv("URL_SHAREPOINT")
-        self.output_dir = os.path.dirname(os.path.abspath(__file__))
+        self.output_dir = BASE_APP
         self.ruta_grafico_distribucion = os.path.join(self.output_dir, 'grafico_distribucion_rdm.png')
         self.ruta_grafico_estatus = os.path.join(self.output_dir, 'grafico_estatus_rdm.png')
 
