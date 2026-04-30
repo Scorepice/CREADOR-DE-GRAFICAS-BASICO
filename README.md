@@ -80,6 +80,25 @@ Notas:
 6. Pulsar "Generar graficas".
 7. Exportar/guardar PNG desde los botones de descarga.
 
+## Portable por USB
+
+### En la PC donde vas a preparar el paquete
+
+1. Verifica que exista el archivo `.env` en la raiz del proyecto con `URL_SHAREPOINT`.
+2. Ejecuta `build_portable.bat` para generar `dist\SistemaPresentacionRDM.exe`.
+3. Ejecuta `preparar_paquete.bat` para crear `release\SistemaPresentacionRDM\` y el ZIP `release\SistemaPresentacionRDM.zip`.
+4. Copia ese ZIP al USB.
+
+### En la otra PC
+
+1. Descomprime `SistemaPresentacionRDM.zip` en una carpeta local o directamente en el USB.
+2. Ejecuta `Ejecutar_RDM.bat` o `SistemaPresentacionRDM.exe`.
+3. Mantén el archivo `.env` junto al ejecutable si necesitas que la app lea el enlace de SharePoint.
+
+Notas:
+- No hace falta instalar Python en la PC destino si usas el `.exe` portable.
+- Si la pantalla es baja o la resolución es reducida, la ventana principal ahora permite desplazamiento vertical para acceder a la parte inferior.
+
 ## Logica de datos (resumen)
 
 - Se lee la hoja 2 del Excel (`sheet_name=1`) con encabezado en fila 2 (`header=1`).

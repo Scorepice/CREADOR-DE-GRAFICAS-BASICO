@@ -59,9 +59,12 @@ font_button = ("Segoe UI", 11, "bold")
 class AplicacionGraficasAvanzada:
     def __init__(self, root):
         self.root = root
+        self._cerrando_app = False
         self.root.title("Generador Automático de Gráficas RDM - v2.0")
         self.root.geometry("1180x940")
-        self.root.configure(padx=18, pady=18, bg=APP_BG)
+        self.root.configure(bg=APP_BG)
+        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_aplicacion)
+        self._configurar_contenedor_desplazable()
         self.usa_poppins = self._configurar_fuentes()
         self._configurar_estilos()
         self.url_invitado = os.getenv("URL_SHAREPOINT")
@@ -132,7 +135,7 @@ class AplicacionGraficasAvanzada:
         self.preview_canvas_popup = None
         self.preview_figure_inline = None
         self.preview_canvas_inline = None
-        panel_superior = tk.Frame(root, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
+        panel_superior = tk.Frame(self.scrollable_frame, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
         panel_superior.pack(fill="x", pady=(0, 12))
 
         tk.Label(
@@ -144,7 +147,7 @@ class AplicacionGraficasAvanzada:
         ).pack(anchor="w", padx=18, pady=14)
         self.label_titulo = None
 
-        panel_config = tk.Frame(root, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
+        panel_config = tk.Frame(self.scrollable_frame, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
         panel_config.pack(fill="x", pady=(0, 12))
         tk.Label(panel_config, text="Configuración", font=("Poppins", 12, "bold") if self.usa_poppins else ("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(12, 8))
 
@@ -221,7 +224,7 @@ class AplicacionGraficasAvanzada:
         self.preview_canvas_inline = FigureCanvasTkAgg(self.preview_figure_inline, master=frame_preview_inline)
         self.preview_canvas_inline.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
 
-        panel_colores = tk.Frame(root, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
+        panel_colores = tk.Frame(self.scrollable_frame, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
         panel_colores.pack(fill="x", pady=(0, 12))
         tk.Label(panel_colores, text="Personalización de colores", font=("Poppins", 12, "bold") if self.usa_poppins else ("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(12, 2))
         frame_estado_superior = tk.Frame(panel_colores, bg=CARD_BG)
@@ -267,16 +270,56 @@ class AplicacionGraficasAvanzada:
             self._aplicar_hover(btn, color)
             self.btn_colors[categoria] = btn
 
-        frame_analisis = tk.Frame(root, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
+        frame_analisis = tk.Frame(self.scrollable_frame, bg=CARD_BG, bd=1, relief="solid", highlightthickness=1, highlightbackground=BORDER_COLOR)
         frame_analisis.pack(fill="x", pady=(0, 12))
         tk.Label(frame_analisis, text="Análisis porcentual", font=("Poppins", 12, "bold") if self.usa_poppins else ("Segoe UI", 12, "bold"), bg=CARD_BG, fg=TEXT_PRIMARY).pack(anchor="w", padx=16, pady=(12, 2))
         tk.Label(frame_analisis, text="Resumen rápido de la distribución procesada.", font=font_interface, bg=CARD_BG, fg=TEXT_SECONDARY).pack(anchor="w", padx=16, pady=(0, 6))
         self.label_analisis_resumen = tk.Label(frame_analisis, text="Procesadas: --% | En Proceso: --%", font=font_interface, bg=CARD_BG, fg=TEXT_PRIMARY)
         self.label_analisis_resumen.pack(anchor="w", padx=16, pady=(0, 14))
 
-        tk.Label(root, text="v2.0", font=("Poppins", 8, "italic") if self.usa_poppins else ("Segoe UI", 8, "italic"), bg=APP_BG, fg=TEXT_SECONDARY).pack(side="bottom")
+        tk.Label(self.scrollable_frame, text="v2.0", font=("Poppins", 8, "italic") if self.usa_poppins else ("Segoe UI", 8, "italic"), bg=APP_BG, fg=TEXT_SECONDARY).pack(anchor="e", pady=(0, 4))
         self.actualizar_vista_previa()
         self.root.after(150, self.cargar_datos_reales_para_preview)
+
+    def _configurar_contenedor_desplazable(self):
+        self.scroll_canvas = tk.Canvas(self.root, bg=APP_BG, highlightthickness=0, bd=0)
+        self.scroll_canvas.pack(side="left", fill="both", expand=True)
+
+        self.scrollbar_vertical = ttk.Scrollbar(self.root, orient="vertical", command=self.scroll_canvas.yview)
+        self.scrollbar_vertical.pack(side="right", fill="y")
+        self.scroll_canvas.configure(yscrollcommand=self.scrollbar_vertical.set)
+
+        self.scrollable_frame = tk.Frame(self.scroll_canvas, bg=APP_BG)
+        self.scrollable_window = self.scroll_canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda _event: self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+        )
+        self.scroll_canvas.bind("<Configure>", self._ajustar_ancho_scroll)
+        self.scroll_canvas.bind_all("<MouseWheel>", self._manejar_rueda_scroll)
+        self.scroll_canvas.bind_all("<Button-4>", self._manejar_rueda_scroll)
+        self.scroll_canvas.bind_all("<Button-5>", self._manejar_rueda_scroll)
+
+    def _ajustar_ancho_scroll(self, event):
+        self.scroll_canvas.itemconfigure(self.scrollable_window, width=event.width)
+
+    def _manejar_rueda_scroll(self, event):
+        if not hasattr(self, "scroll_canvas"):
+            return
+
+        if getattr(event, "num", None) == 4:
+            movimiento = -1
+        elif getattr(event, "num", None) == 5:
+            movimiento = 1
+        else:
+            delta = getattr(event, "delta", 0)
+            if delta == 0:
+                return
+            movimiento = -1 * int(delta / 120)
+
+        if movimiento:
+            self.scroll_canvas.yview_scroll(movimiento, "units")
 
     def _configurar_fuentes(self):
         global font_interface, font_title, font_button
@@ -1027,11 +1070,19 @@ class AplicacionGraficasAvanzada:
         VentanaGraficaPersonalizada(self.root, font_interface, font_title)
 
     def abrir_ventana_preview(self):
-        if self.preview_window is not None and self.preview_window.winfo_exists():
-            self.preview_window.lift()
-            self.preview_window.focus_force()
-            self.actualizar_vista_previa()
+        if self._cerrando_app:
             return
+
+        try:
+            if self.preview_window is not None and self.preview_window.winfo_exists():
+                self.preview_window.lift()
+                self.preview_window.focus_force()
+                self.actualizar_vista_previa()
+                return
+        except tk.TclError:
+            self.preview_window = None
+            self.preview_figure_popup = None
+            self.preview_canvas_popup = None
 
         self.preview_window = tk.Toplevel(self.root)
         self.preview_window.title("Vista Previa de Gráficas")
@@ -1054,6 +1105,36 @@ class AplicacionGraficasAvanzada:
             self.preview_figure_popup = None
             self.preview_canvas_popup = None
 
+    def cerrar_aplicacion(self):
+        if self._cerrando_app:
+            return
+
+        self._cerrando_app = True
+        try:
+            if self.preview_window is not None:
+                try:
+                    if self.preview_window.winfo_exists():
+                        self.preview_window.destroy()
+                except tk.TclError:
+                    pass
+
+            self.preview_window = None
+            self.preview_figure_popup = None
+            self.preview_canvas_popup = None
+            self.preview_figure_inline = None
+            self.preview_canvas_inline = None
+            plt.close('all')
+        finally:
+            try:
+                self.root.quit()
+            except tk.TclError:
+                pass
+
+            try:
+                self.root.destroy()
+            except tk.TclError:
+                pass
+
     def cargar_datos_reales_para_preview(self):
         try:
             archivo = self.obtener_datos_de_enlace(self.url_invitado)
@@ -1075,18 +1156,32 @@ class AplicacionGraficasAvanzada:
             pass
 
     def actualizar_vista_previa(self):
+        if self._cerrando_app:
+            return
+
         datos = self.datos_ultima_ejecucion
         self._actualizar_analisis_porcentual(datos)
 
         if self.preview_figure_inline is not None and self.preview_canvas_inline is not None:
             self._render_preview_figure(self.preview_figure_inline, datos, modo="inline")
-            self.preview_canvas_inline.draw()
+            try:
+                self.preview_canvas_inline.draw()
+            except tk.TclError:
+                return
 
-        if self.preview_window is None or not self.preview_window.winfo_exists() or self.preview_figure_popup is None:
+        try:
+            preview_activo = self.preview_window is not None and self.preview_window.winfo_exists() and self.preview_figure_popup is not None
+        except tk.TclError:
+            preview_activo = False
+
+        if not preview_activo:
             return
 
         self._render_preview_figure(self.preview_figure_popup, datos, modo="popup")
-        self.preview_canvas_popup.draw()
+        try:
+            self.preview_canvas_popup.draw()
+        except tk.TclError:
+            pass
 
     def ejecutar_proceso(self):
         # Cambia el estado del botón durante el procesamiento

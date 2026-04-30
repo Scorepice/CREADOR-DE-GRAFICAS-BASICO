@@ -55,6 +55,28 @@ pip install python-dotenv requests pandas matplotlib openpyxl
 2. El ejecutable queda en `dist\SistemaPresentacionRDM.exe`.
 3. Para moverlo a otra PC, copia el `.exe` junto con `.env`.
 
+## Instalar en otra PC mediante USB
+
+### Preparar en la PC de origen
+
+1. Asegura que el archivo `.env` exista en la raiz del proyecto y tenga `URL_SHAREPOINT` configurado.
+2. Ejecuta `build_portable.bat` para generar el ejecutable portable.
+3. Ejecuta `preparar_paquete.bat` para crear la carpeta `release\SistemaPresentacionRDM` y el archivo `release\SistemaPresentacionRDM.zip`.
+4. Copia el ZIP al USB.
+
+### Instalar en la PC destino
+
+1. Copia o descomprime `SistemaPresentacionRDM.zip` en una carpeta local de la PC destino.
+2. Abre `Ejecutar_RDM.bat` o ejecuta `SistemaPresentacionRDM.exe`.
+3. Conserva `.env` junto al `.exe` si la app debe leer el enlace de SharePoint.
+4. Si la ventana se ve recortada por la resolución del monitor, usa el scroll vertical de la pantalla principal para bajar hasta la sección inferior.
+
+### Ventaja del flujo portable
+
+- No requiere instalar Python en la PC destino.
+- El archivo ZIP ya incluye el ejecutable y el lanzador.
+- El scroll vertical evita perder acceso a la parte inferior en monitores de escritorio más bajos.
+
 ## Generar instalador de Windows
 
 1. Ejecuta `crear_instalador.bat`.

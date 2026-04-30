@@ -7,8 +7,3 @@ build/
 dist/
 *.spec
 *.png
-# Archivos ejecutables y carpetas pesadas
-*.exe
-dist/
-build/
-*.spec
